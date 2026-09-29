@@ -2,7 +2,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, TimerAction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
@@ -15,10 +15,12 @@ def generate_launch_description():
     rviz = LaunchConfiguration('rviz')
     return LaunchDescription([
         DeclareLaunchArgument('config', default_value=os.path.join(share, 'config', 'params.yaml')),
-        DeclareLaunchArgument('input_topic', default_value='/lidar_points'),
+        DeclareLaunchArgument('input_topic', default_value=''),
         DeclareLaunchArgument('log_path', default_value=''),
         DeclareLaunchArgument('bag', default_value=''),
         DeclareLaunchArgument('rate', default_value='1.0'),
+        DeclareLaunchArgument('play_delay', default_value='3.0'),
+        DeclareLaunchArgument('read_ahead', default_value='20'),
         DeclareLaunchArgument('rviz', default_value='false'),
         Node(
             package='lidar_obstacle_detector',
@@ -31,9 +33,13 @@ def generate_launch_description():
                 'log_path': LaunchConfiguration('log_path'),
             }],
         ),
-        ExecuteProcess(
-            cmd=['ros2', 'bag', 'play', bag, '--rate', LaunchConfiguration('rate')],
-            output='screen',
+        TimerAction(
+            period=LaunchConfiguration('play_delay'),
+            actions=[ExecuteProcess(
+                cmd=['ros2', 'bag', 'play', bag, '--rate', LaunchConfiguration('rate'),
+                     '--read-ahead-queue-size', LaunchConfiguration('read_ahead')],
+                output='screen',
+            )],
             condition=IfCondition(PythonExpression(["'", bag, "' != ''"])),
         ),
         Node(

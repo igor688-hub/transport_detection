@@ -89,7 +89,7 @@ def main():
     out.parent.mkdir(parents=True, exist_ok=True)
     w = writer(out, 10 / a.step, (1280, 720))
     name = Path(a.bag).name
-    for i, t, xyz in frames(a.bag, '/lidar_points'):
+    for i, t, xyz in frames(a.bag, None):
         if a.end is not None and i > a.end:
             break
         res = pipe.process(xyz, t)

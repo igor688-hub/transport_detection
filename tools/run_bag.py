@@ -16,7 +16,10 @@ from detector.pointcloud import structured, valid_xyz
 def frames_raw(bag, topic):
     ts = get_typestore(Stores.ROS2_HUMBLE)
     with Reader(Path(bag)) as reader:
-        conns = [c for c in reader.connections if c.topic == topic]
+        clouds = [c for c in reader.connections if c.msgtype == 'sensor_msgs/msg/PointCloud2']
+        conns = [c for c in clouds if c.topic == topic] if topic else clouds[:1]
+        if not conns:
+            raise SystemExit(f'no PointCloud2 topic {topic or ""} in {bag}')
         for i, (conn, t, raw) in enumerate(reader.messages(connections=conns)):
             msg = ts.deserialize_cdr(raw, conn.msgtype)
             yield i, t / 1e9, structured(msg.fields, msg.point_step, msg.data, msg.width * msg.height)
@@ -27,7 +30,7 @@ def frames(bag, topic):
         yield i, t, valid_xyz(arr)
 
 
-def run(bag, params, out, topic='/lidar_points', limit=None, viz=None):
+def run(bag, params, out, topic=None, limit=None, viz=None):
     pipe = Pipeline(params)
     out.parent.mkdir(parents=True, exist_ok=True)
     lat = []
@@ -51,7 +54,7 @@ if __name__ == '__main__':
     ap.add_argument('bag')
     ap.add_argument('--params', default=None)
     ap.add_argument('--out', default=None)
-    ap.add_argument('--topic', default='/lidar_points')
+    ap.add_argument('--topic', default=None)
     ap.add_argument('--limit', type=int, default=None)
     a = ap.parse_args()
     out = Path(a.out or f'results/{Path(a.bag).name}.jsonl')

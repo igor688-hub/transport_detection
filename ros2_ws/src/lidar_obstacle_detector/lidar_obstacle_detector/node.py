@@ -36,7 +36,7 @@ def cloud_msg(header, xyz):
 class DetectorNode(Node):
     def __init__(self):
         super().__init__('lidar_obstacle_detector')
-        self.declare_parameter('input_topic', '/lidar_points')
+        self.declare_parameter('input_topic', '')
         self.declare_parameter('config', '')
         self.declare_parameter('log_path', '')
         self.declare_parameter('publish_debug', True)
@@ -46,16 +46,31 @@ class DetectorNode(Node):
         self.debug = self.get_parameter('publish_debug').value
         log_path = self.get_parameter('log_path').value
         self.log = open(log_path, 'w', encoding='utf-8') if log_path else None
-        qos = QoSProfile(reliability=ReliabilityPolicy.BEST_EFFORT, history=HistoryPolicy.KEEP_LAST, depth=1)
-        topic = self.get_parameter('input_topic').value
-        self.sub = self.create_subscription(PointCloud2, topic, self.on_cloud, qos)
+        self.qos = QoSProfile(reliability=ReliabilityPolicy.RELIABLE, history=HistoryPolicy.KEEP_LAST, depth=1)
+        self.sub = None
         self.pub_status = self.create_publisher(String, '/obstacle/status', 10)
         self.pub_detected = self.create_publisher(Bool, '/obstacle/detected', 10)
         self.pub_distance = self.create_publisher(Float32, '/obstacle/distance', 10)
         self.pub_markers = self.create_publisher(MarkerArray, '/obstacle/markers', 10)
         self.pub_points = self.create_publisher(PointCloud2, '/obstacle/points', 10)
         self.frames = 0
+        topic = self.get_parameter('input_topic').value
+        if topic:
+            self.subscribe(topic)
+        else:
+            self.get_logger().info('waiting for a PointCloud2 topic')
+            self.discovery = self.create_timer(0.5, self.discover)
+
+    def subscribe(self, topic):
+        self.sub = self.create_subscription(PointCloud2, topic, self.on_cloud, self.qos)
         self.get_logger().info(f'listening on {topic}')
+
+    def discover(self):
+        for name, types in self.get_topic_names_and_types():
+            if 'sensor_msgs/msg/PointCloud2' in types and not name.startswith('/obstacle'):
+                self.discovery.cancel()
+                self.subscribe(name)
+                return
 
     def on_cloud(self, msg):
         arr = structured(msg.fields, msg.point_step, msg.data, msg.width * msg.height)

@@ -22,7 +22,7 @@ def tail_points(arr):
 
 def main(bag, out):
     rows = []
-    for i, t, arr in frames_raw(bag, '/lidar_points'):
+    for i, t, arr in frames_raw(bag, None):
         pts = tail_points(arr)
         if len(pts) == 0:
             continue
