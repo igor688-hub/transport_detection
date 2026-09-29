@@ -118,7 +118,7 @@ docker run --rm -it -v /path/to/bags:/data -v $(pwd)/my.yaml:/cfg.yaml transport
 Нужен Python 3.8+.
 
 ```bash
-pip install -e .[offline]
+pip install -e .[offline,video,dev]
 python tools/run_bag.py /path/to/bags/doubleT_obstacle --out results/doubleT_obstacle.jsonl
 python tools/evaluate.py results/*.jsonl
 python tools/render_video.py /path/to/bags/doubleT_obstacle --out results/doubleT_obstacle.mp4

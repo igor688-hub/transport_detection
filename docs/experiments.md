@@ -53,13 +53,16 @@ python tools/eval_synthetic.py results/cloud_with_fake_obj.jsonl
 
 ### Пустые записи
 
-| Запись | Кадров | Ложных объектов |
-|---|---|---|
-| `roundT_pressureGate_roundT` | 268 | 1 |
-| `doubleT_platform` | 345 | 2 |
-| `squareT_platform_squareT_switch` | 877 | 4 |
-| `roundT_doubleT` | 252 | 7 |
-| `roundT_squareT_pressureGate_squareT` | 545 | 8 |
+| Запись | Кадров | Ложных объектов | Кадров с тревогой |
+|---|---|---|---|
+| `roundT_pressureGate_roundT` | 268 | 1 | 15 |
+| `doubleT_platform` | 345 | 2 | 89 |
+| `squareT_platform_squareT_switch` | 877 | 4 | 20 |
+| `roundT_doubleT` | 252 | 7 | 48 |
+| `roundT_squareT_pressureGate_squareT` | 545 | 8 | 43 |
+
+Всего тревога звучит примерно в каждом десятом кадре пустых записей. Больше всего её даёт
+`doubleT_platform`: два объекта у платформы держатся долго.
 
 Больше всего ошибок на участках, где меняется тип тоннеля и стены резко расходятся.
 
@@ -70,7 +73,8 @@ python tools/eval_synthetic.py results/cloud_with_fake_obj.jsonl
 | обычный кадр, около 300 тысяч точек | 65 мс | 90 мс |
 | `doubleT_obstacle`, около 900 тысяч точек | 100 мс | 126 мс |
 
-Лидар отдаёт 10 кадров в секунду, решение укладывается в этот темп на одном ядре CPU.
+Замер сделан в одном процессе Python на CPU ноутбука, GPU не используется. Лидар отдаёт 10 кадров
+в секунду, то есть кадр приходит раз в 100 мс: ядро детектора обрабатывает обычный кадр быстрее.
 
 В режиме ROS 2 внутри Docker (`play`, запись проигрывается в реальном времени):
 
