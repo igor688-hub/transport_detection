@@ -1,0 +1,6 @@
+numpy
+scipy
+matplotlib
+pyyaml
+rosbags>=0.10
+zstandard

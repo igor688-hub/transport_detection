@@ -1,0 +1,16 @@
+data/
+*.db3
+*.zst
+*.bag
+*.pcd
+*.bin
+__pycache__/
+*.pyc
+.venv/
+.idea/
+.vscode/
+reports/**/*.json
+reports/*.log
+*.npy
+docs/01_brief.md
+docs/03_plan.md
