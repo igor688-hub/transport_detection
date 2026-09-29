@@ -39,7 +39,10 @@ def _components(pts, radius):
     rep = pts[first]
     m = len(rep)
     pairs = cKDTree(rep).query_pairs(radius, output_type='ndarray')
-    graph = coo_matrix((np.ones(len(pairs)), (pairs[:, 0], pairs[:, 1])), shape=(m, m)) if len(pairs) else         coo_matrix((m, m))
+    if len(pairs):
+        graph = coo_matrix((np.ones(len(pairs)), (pairs[:, 0], pairs[:, 1])), shape=(m, m))
+    else:
+        graph = coo_matrix((m, m))
     k, lab = connected_components(graph, directed=False)
     return lab[inv.ravel()], k
 
