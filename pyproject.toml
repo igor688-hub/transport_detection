@@ -9,7 +9,7 @@ requires-python = ">=3.8"
 dependencies = ["numpy", "scipy", "pyyaml"]
 
 [project.optional-dependencies]
-offline = ["rosbags>=0.9"]
+offline = ["rosbags>=0.10"]
 
 [tool.setuptools]
 packages = ["detector"]

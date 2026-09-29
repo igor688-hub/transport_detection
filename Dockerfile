@@ -11,7 +11,7 @@ COPY pyproject.toml ./
 COPY detector ./detector
 COPY tools ./tools
 COPY config ./config
-RUN pip3 install --no-cache-dir --no-deps . && pip3 install --no-cache-dir "rosbags>=0.9,<0.11"
+RUN pip3 install --no-cache-dir --no-deps . && pip3 install --no-cache-dir "numpy<2" "rosbags>=0.10,<0.12"
 
 COPY ros2_ws /opt/ros2_ws
 RUN cp config/params.yaml /opt/ros2_ws/src/lidar_obstacle_detector/config/params.yaml \
