@@ -82,6 +82,7 @@ docker run --rm -it -v /path/to/bags:/data -v $(pwd)/my.yaml:/cfg.yaml transport
 | Аргумент | По умолчанию | Смысл |
 |---|---|---|
 | `input_topic` | пусто | топик с облаком точек; по умолчанию нода сама находит первый топик типа `PointCloud2` |
+| `reliability` | `auto` | режим подписки: `auto` подстраивается под издателя, также `reliable` или `best_effort` |
 | `config` | `config/params.yaml` | параметры алгоритма |
 | `log_path` | пусто | файл, куда писать результат каждого кадра |
 | `rate` | `1.0` | скорость проигрывания записи в режиме `play` |

@@ -40,13 +40,13 @@ class DetectorNode(Node):
         self.declare_parameter('config', '')
         self.declare_parameter('log_path', '')
         self.declare_parameter('publish_debug', True)
+        self.declare_parameter('reliability', 'auto')
         config = self.get_parameter('config').value or None
         self.params = Params.load(config)
         self.pipeline = Pipeline(self.params)
         self.debug = self.get_parameter('publish_debug').value
         log_path = self.get_parameter('log_path').value
         self.log = open(log_path, 'w', encoding='utf-8') if log_path else None
-        self.qos = QoSProfile(reliability=ReliabilityPolicy.RELIABLE, history=HistoryPolicy.KEEP_LAST, depth=1)
         self.sub = None
         self.pub_status = self.create_publisher(String, '/obstacle/status', 10)
         self.pub_detected = self.create_publisher(Bool, '/obstacle/detected', 10)
@@ -54,23 +54,33 @@ class DetectorNode(Node):
         self.pub_markers = self.create_publisher(MarkerArray, '/obstacle/markers', 10)
         self.pub_points = self.create_publisher(PointCloud2, '/obstacle/points', 10)
         self.frames = 0
-        topic = self.get_parameter('input_topic').value
-        if topic:
-            self.subscribe(topic)
-        else:
-            self.get_logger().info('waiting for a PointCloud2 topic')
-            self.discovery = self.create_timer(0.5, self.discover)
-
-    def subscribe(self, topic):
-        self.sub = self.create_subscription(PointCloud2, topic, self.on_cloud, self.qos)
-        self.get_logger().info(f'listening on {topic}')
+        self.wanted = self.get_parameter('input_topic').value
+        self.get_logger().info(f'waiting for {self.wanted or "a PointCloud2 topic"}')
+        self.discovery = self.create_timer(0.5, self.discover)
 
     def discover(self):
-        for name, types in self.get_topic_names_and_types():
-            if 'sensor_msgs/msg/PointCloud2' in types and not name.startswith('/obstacle'):
+        if self.wanted:
+            names = [self.wanted]
+        else:
+            names = [name for name, types in self.get_topic_names_and_types()
+                     if 'sensor_msgs/msg/PointCloud2' in types and not name.startswith('/obstacle')]
+        for name in names:
+            pubs = self.get_publishers_info_by_topic(name)
+            if pubs:
                 self.discovery.cancel()
-                self.subscribe(name)
+                self.subscribe(name, pubs)
                 return
+
+    def subscribe(self, topic, pubs):
+        mode = self.get_parameter('reliability').value
+        if mode == 'auto':
+            best_effort = any(p.qos_profile.reliability == ReliabilityPolicy.BEST_EFFORT for p in pubs)
+        else:
+            best_effort = mode == 'best_effort'
+        reliability = ReliabilityPolicy.BEST_EFFORT if best_effort else ReliabilityPolicy.RELIABLE
+        qos = QoSProfile(reliability=reliability, history=HistoryPolicy.KEEP_LAST, depth=1)
+        self.sub = self.create_subscription(PointCloud2, topic, self.on_cloud, qos)
+        self.get_logger().info(f'listening on {topic}, {"best effort" if best_effort else "reliable"}')
 
     def on_cloud(self, msg):
         arr = structured(msg.fields, msg.point_step, msg.data, msg.width * msg.height)

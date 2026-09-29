@@ -16,6 +16,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('config', default_value=os.path.join(share, 'config', 'params.yaml')),
         DeclareLaunchArgument('input_topic', default_value=''),
+        DeclareLaunchArgument('reliability', default_value='auto'),
         DeclareLaunchArgument('log_path', default_value=''),
         DeclareLaunchArgument('bag', default_value=''),
         DeclareLaunchArgument('rate', default_value='1.0'),
@@ -30,6 +31,7 @@ def generate_launch_description():
             parameters=[{
                 'config': config,
                 'input_topic': LaunchConfiguration('input_topic'),
+                'reliability': LaunchConfiguration('reliability'),
                 'log_path': LaunchConfiguration('log_path'),
             }],
         ),
