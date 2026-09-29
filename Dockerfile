@@ -17,7 +17,8 @@ RUN pip3 install --no-cache-dir "numpy<2" "rosbags>=0.10,<0.12"
 ENV PYTHONPATH=/opt/detector
 
 COPY ros2_ws /opt/ros2_ws
-RUN cp config/params.yaml /opt/ros2_ws/src/lidar_obstacle_detector/config/params.yaml \
+RUN mkdir -p /opt/ros2_ws/src/lidar_obstacle_detector/config \
+    && cp config/params.yaml /opt/ros2_ws/src/lidar_obstacle_detector/config/params.yaml \
     && . /opt/ros/humble/setup.sh \
     && cd /opt/ros2_ws && colcon build --symlink-install
 
