@@ -107,6 +107,14 @@ python tools/render_video.py /path/to/bags/doubleT_obstacle --out results/double
 python -m pytest tests
 ```
 
+## Видео
+
+- [Реальное препятствие, поезд стоит](media/real_obstacle.mp4)
+- [Добавленные препятствия, поезд едет](media/synthetic_obstacles.mp4)
+- [Пустой тоннель с кривой и гермоворотами](media/empty_curve.mp4)
+
+Видео собираются командой `python tools/render_video.py <запись> --out <файл>.mp4`.
+
 ## Документация
 
 - [Алгоритм](docs/algorithm.md)
@@ -125,4 +133,5 @@ tests/        тесты на синтетической сцене
 analysis/     скрипты анализа данных
 docs/         документация
 reports/      графики
+media/        видео работы
 ```
