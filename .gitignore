@@ -14,3 +14,4 @@ reports/*.log
 *.npy
 docs/01_brief.md
 docs/03_plan.md
+results/
