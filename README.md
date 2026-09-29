@@ -46,6 +46,10 @@ docker run --rm -it --net=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-u
   -v /path/to/bags:/data transport_detection play /data/doubleT_obstacle rviz:=true
 ```
 
+В конфиге RViz выбраны топик `/lidar_points` и система координат `hesai_lidar`, как в большинстве записей.
+В записи `doubleT_obstacle` облако приходит в топик `/sensing/lidar/hesai128/pointcloud` с системой
+координат `lidar_livox`: их можно выбрать в RViz в полях Topic и Fixed Frame.
+
 ## Выход
 
 | Топик | Тип | Что внутри |
