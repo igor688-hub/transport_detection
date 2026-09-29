@@ -89,7 +89,7 @@ class DetectorNode(Node):
             self.log.flush()
         if res.obstacle:
             self.get_logger().warn(f'obstacle at {res.nearest:.1f} m, objects: {len(res.tracks)}')
-        if self.debug:
+        if self.debug and res.path is not None:
             self.publish_debug(msg.header, res)
 
     def publish_debug(self, header, res):

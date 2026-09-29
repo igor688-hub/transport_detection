@@ -52,16 +52,21 @@ class Pipeline:
         if self.done:
             return
         self.buffer.append(xyz[::4])
+        self.buffer = self.buffer[-self.p.calib_frames:]
         full = len(self.buffer) >= self.p.calib_frames
         if self.calib is None or full:
-            self.calib = calibrate(self.buffer, self.p)
-        if full:
-            self.done = True
+            calib = calibrate(self.buffer, self.p)
+            if calib is not None:
+                self.calib = calib
+                self.done = full
+        if self.done:
             self.buffer = []
 
     def process(self, xyz, stamp):
         t0 = time.perf_counter()
         self._calibrate(xyz)
+        if self.calib is None:
+            return FrameResult(stamp, False, np.inf, 0.0, [], [], (time.perf_counter() - t0) * 1000.0)
         slh = self.calib.to_track(xyz)
         p = self.p
         roi = (slh[:, 0] > p.min_range) & (slh[:, 0] < p.max_range) & (np.abs(slh[:, 1]) < p.roi_half_width)

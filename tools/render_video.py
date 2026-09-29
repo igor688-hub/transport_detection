@@ -93,7 +93,7 @@ def main():
         if a.end is not None and i > a.end:
             break
         res = pipe.process(xyz, t)
-        if i < a.start or (i - a.start) % a.step:
+        if i < a.start or (i - a.start) % a.step or res.path is None:
             continue
         fig.texts.clear()
         draw(fig, axes, xyz, res, pipe, f'{name}  кадр {i}', a.view)

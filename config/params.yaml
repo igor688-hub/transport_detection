@@ -3,6 +3,7 @@ min_range: 2.0
 max_range: 230.0
 roi_half_width: 12.0
 calib_frames: 10
+calib_min_points: 500
 calib_s_min: 3.0
 calib_s_max: 25.0
 calib_half_width: 3.0

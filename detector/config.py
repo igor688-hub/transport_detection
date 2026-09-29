@@ -12,6 +12,7 @@ class Params:
     roi_half_width: float = 12.0
 
     calib_frames: int = 10
+    calib_min_points: int = 500
     calib_s_min: float = 3.0
     calib_s_max: float = 25.0
     calib_half_width: float = 3.0

@@ -48,6 +48,8 @@ def lowest_per_cell(pts, cell):
 
 
 def fit_plane_ransac(pts, tol, iters=300, seed=0):
+    if len(pts) < 3:
+        return None
     rng = np.random.default_rng(seed)
     best_count, best = -1, None
     for _ in range(iters):
@@ -64,6 +66,8 @@ def fit_plane_ransac(pts, tol, iters=300, seed=0):
         inl = np.abs(pts @ n - n @ q[0]) < tol
         if inl.sum() > best_count:
             best_count, best = inl.sum(), inl
+    if best is None or best_count < 3:
+        return None
     p = pts[best]
     c = p.mean(axis=0)
     n = np.linalg.svd(p - c)[2][2]
@@ -138,10 +142,18 @@ class Calibration:
 
 
 def calibrate(clouds, p):
+    clouds = [c for c in clouds if len(c)]
+    if not clouds:
+        return None
     body = np.concatenate([to_body(c, p.forward_axis) for c in clouds])
     near = body[(body[:, 0] > p.calib_s_min) & (body[:, 0] < p.calib_s_max) & (np.abs(body[:, 1]) < p.calib_half_width)]
+    if len(near) < p.calib_min_points:
+        return None
     cells = lowest_per_cell(near, p.ground_cell)
-    n, d = fit_plane_ransac(cells, p.ground_tol)
+    plane = fit_plane_ransac(cells, p.ground_tol)
+    if plane is None:
+        return None
+    n, d = plane
     rot = rotation_to_up(n)
     lev = body @ rot.T
     lev[:, 2] -= d
