@@ -1,7 +1,7 @@
 # Архитектура
 
 ```
-ros2 bag play ──▶ /lidar_points (PointCloud2)
+ros2 bag play ──▶ облако точек (PointCloud2)
                         │
                         ▼
           lidar_obstacle_detector (ROS 2 нода)

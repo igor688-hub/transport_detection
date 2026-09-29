@@ -30,7 +30,7 @@
 
 ## Формат облака
 
-- Топик `/lidar_points`, тип `sensor_msgs/PointCloud2`, частота 10 Гц.
+- Топик `/lidar_points` (в `doubleT_obstacle` топик `/sensing/lidar/hesai128/pointcloud`), тип `sensor_msgs/PointCloud2`, частота 10 Гц.
 - Поля: `x, y, z, intensity`, в полных записях ещё `ring` и `timestamp`.
 - Точки идут колонками по 128, по одной на каждый канал лидара.
 - Точки без отражения записаны как нули, их нужно отбрасывать.
