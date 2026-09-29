@@ -18,6 +18,7 @@ class Track:
     age: int = 0
     misses: int = 0
     confirmed: bool = False
+    hist: deque = field(default_factory=deque)
 
     def confidence(self):
         return len([x for x in self.hits if x]) / max(len(self.hits), 1)
@@ -29,6 +30,19 @@ class Tracker:
         self.tracks = []
         self.next_id = 1
         self.last_t = None
+
+    def _consistent(self, tr):
+        p = self.p
+        if not p.track_consistency or len(tr.hist) < 2:
+            return True
+        h = np.array(tr.hist)
+        if np.ptp(h[:, 1]) > p.track_max_lat_jitter:
+            return False
+        if np.ptp(h[:, 2]) > p.track_max_height_jitter:
+            return False
+        if np.max(np.diff(h[:, 0])) > p.track_max_recede:
+            return False
+        return True
 
     def update(self, detections, t):
         p = self.p
@@ -60,15 +74,20 @@ class Tracker:
                 tr.size, tr.points, tr.last_time = det.size, det.points, t
                 tr.misses = 0
                 tr.hits.append(True)
+                tr.hist.append((det.distance, det.lateral, det.height))
             while len(tr.hits) > p.track_window:
                 tr.hits.popleft()
-            if sum(tr.hits) >= p.track_hits_to_confirm:
+            while len(tr.hist) > p.track_window:
+                tr.hist.popleft()
+            need = p.track_hits_to_confirm + (p.track_far_extra_hits if tr.distance > p.track_far_distance else 0)
+            if sum(tr.hits) >= need and (tr.confirmed or self._consistent(tr)):
                 tr.confirmed = True
         for j, det in enumerate(detections):
             if j in used:
                 continue
             self.tracks.append(Track(self.next_id, det.distance, det.lateral, det.height, det.size, det.points, t,
-                                     det.distance, deque([True])))
+                                     det.distance, deque([True]),
+                                     hist=deque([(det.distance, det.lateral, det.height)])))
             self.next_id += 1
         self.tracks = [tr for tr in self.tracks if tr.misses <= p.track_max_misses]
         return [tr for tr in self.tracks if tr.confirmed and tr.misses <= p.track_hold]

@@ -75,6 +75,27 @@ class Params:
     track_max_misses: int = 5
     track_hold: int = 2
 
+    edge_reject: bool = True
+    edge_band: float = 0.15
+    edge_frac: float = 0.85
+    edge_keep_depth: float = 0.5
+    end_guard: float = 0.0
+    end_guard_frac: float = 0.15
+    far_support_distance: float = 1000.0
+    far_min_wall_bins: int = 0
+    warmup_frames: int = 0
+    track_consistency: bool = True
+    track_max_lat_jitter: float = 0.4
+    track_max_height_jitter: float = 0.6
+    track_max_recede: float = 2.0
+    track_far_extra_hits: int = 0
+    track_far_distance: float = 80.0
+    span_reject: bool = True
+    span_height: float = 2.4
+    wall_length: float = 4.0
+    wall_height: float = 2.0
+    dump_all: bool = False
+
     extra: dict = field(default_factory=dict)
 
     @classmethod

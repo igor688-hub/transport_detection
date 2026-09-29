@@ -14,6 +14,14 @@ class Detection:
     size: tuple
     points: int
     center: tuple
+    max_depth: float = 0.0
+    edge_frac: float = 0.0
+    touches: bool = False
+    s_max: float = 0.0
+    wall_bins: int = 0
+    rail_bins: int = 0
+    whole_points: int = 0
+    h_min: float = 0.0
 
 
 def gauge_depth(s, d, h, p):
@@ -80,14 +88,17 @@ def detect(slh, path, p):
         if n_in == 0:
             continue
         near = float(pts[inside, 0].min())
-        if n_in < min_points(near, p):
+        if n_in < (2 if p.dump_all else min_points(near, p)):
             continue
-        if (sel & ~inside_all).any() and dep[inside].max() < p.gauge_penetration:
+        touches = bool((sel & ~inside_all).any())
+        max_depth = float(dep[inside].max())
+        if not p.dump_all and touches and max_depth < p.gauge_penetration:
             continue
         c = pts[inside]
         whole = pts[sel]
         if np.ptp(whole[:, 0]) > p.linear_min_length and np.ptp(whole[:, 1]) < p.linear_max_width:
             continue
+        edge_frac = float((dep[sel] < p.edge_band).mean())
         out.append(Detection(
             distance=near,
             lateral=float(np.median(c[:, 1])),
@@ -95,5 +106,30 @@ def detect(slh, path, p):
             size=tuple(float(v) for v in (np.ptp(c[:, 0]), np.ptp(c[:, 1]), np.ptp(c[:, 2]))),
             points=n_in,
             center=tuple(float(v) for v in c.mean(axis=0)),
+            max_depth=max_depth,
+            edge_frac=edge_frac,
+            touches=touches,
+            s_max=float(path.s_max),
+            wall_bins=int(path.support.get('wall_bins', 0)),
+            rail_bins=int(path.support.get('rail_bins', 0)),
+            whole_points=int(sel.sum()),
+            h_min=float(c[:, 2].min()),
         ))
     return out, pts[inside_all]
+
+
+def accept(det, p):
+    if det.points < min_points(det.distance, p):
+        return False
+    if det.touches and det.max_depth < p.gauge_penetration:
+        return False
+    if p.edge_reject and det.edge_frac > p.edge_frac and det.max_depth < p.edge_keep_depth:
+        return False
+    if p.span_reject and (det.size[2] > p.span_height or (det.size[0] > p.wall_length and det.size[2] > p.wall_height)):
+        return False
+    guard = max(p.end_guard, p.end_guard_frac * det.s_max)
+    if guard > 0 and det.distance > det.s_max - guard:
+        return False
+    if det.distance > p.far_support_distance and det.wall_bins < p.far_min_wall_bins:
+        return False
+    return True

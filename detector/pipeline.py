@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .detect import detect
+from .detect import accept, detect
 from .geometry import calibrate
 from .path import estimate_path
 from .tracking import Tracker
@@ -47,6 +47,7 @@ class Pipeline:
         self.done = calibration is not None
         self.buffer = []
         self.tracker = Tracker(params)
+        self.frames_since_calib = 0
 
     def _calibrate(self, xyz):
         if self.done:
@@ -74,8 +75,12 @@ class Pipeline:
         near = slh[:, 0] < p.path_decimate_range
         keep = ~near | (np.arange(len(slh)) % p.path_decimate == 0)
         path = estimate_path(slh[keep], self.calib, p)
-        dets, cand = detect(slh, path, p)
-        tracks = self.tracker.update(dets, stamp)
+        raw, cand = detect(slh, path, p)
+        dets = raw if p.dump_all else [d for d in raw if accept(d, p)]
+        self.frames_since_calib += 1
+        tracks = [] if p.dump_all else self.tracker.update(dets, stamp)
+        if self.frames_since_calib <= p.warmup_frames:
+            tracks = []
         nearest = min((t.distance for t in tracks), default=np.inf)
-        return FrameResult(stamp, bool(tracks), nearest, path.s_max, tracks, dets,
+        return FrameResult(stamp, bool(tracks), nearest, path.s_max, tracks, raw if p.dump_all else dets,
                            (time.perf_counter() - t0) * 1000.0, path, cand)
